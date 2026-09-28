@@ -1,0 +1,896 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Echo Span</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0b1020;
+        --card: #141b31;
+        --line: #2d3b61;
+        --text: #eef3ff;
+        --muted: #9fafd0;
+        --accent: #7c8cff;
+        --good: #42d39b;
+        --warn: #ffc86b;
+        --bad: #ff7186;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        min-height: 100vh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: radial-gradient(circle at top right, #202d62, transparent 35%), var(--bg);
+        color: var(--text);
+        font:
+          16px/1.5 system-ui,
+          sans-serif;
+      }
+      main {
+        width: min(760px, 100%);
+      }
+      .hero {
+        margin-bottom: 20px;
+        text-align: center;
+      }
+      h1 {
+        margin: 0;
+        font-size: clamp(2rem, 5vw, 3.2rem);
+        letter-spacing: -0.06em;
+      }
+      .hero p {
+        margin: 6px 0;
+        color: var(--muted);
+      }
+      .card {
+        padding: clamp(18px, 4vw, 30px);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: var(--card);
+        box-shadow: 0 20px 55px #03061166;
+      }
+      .screen[hidden] {
+        display: none;
+      }
+      .tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        padding: 5px;
+        margin-bottom: 24px;
+        border-radius: 13px;
+        background: #0c1223;
+      }
+      .tabs button {
+        border: 0;
+        border-radius: 9px;
+        padding: 10px;
+        background: transparent;
+        color: var(--muted);
+        font-weight: 700;
+      }
+      .tabs button[aria-selected='true'] {
+        background: #1b2542;
+        color: #fff;
+      }
+      .settings {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+      }
+      label {
+        display: grid;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 0.87rem;
+        font-weight: 650;
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 10px 11px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #0e1528;
+        color: var(--text);
+        font: inherit;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus,
+      button:focus-visible {
+        outline: 3px solid #7c8cff77;
+        outline-offset: 2px;
+      }
+      .voice-row {
+        display: flex;
+        gap: 7px;
+        align-items: stretch;
+      }
+      .voice-row select {
+        min-width: 0;
+      }
+      .icon-button {
+        display: grid;
+        place-items: center;
+        width: 42px;
+        flex: 0 0 42px;
+        padding: 0;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #1b2542;
+        color: var(--text);
+      }
+      .icon-button:hover {
+        background: #29365d;
+      }
+      .icon-button svg {
+        width: 18px;
+        height: 18px;
+        fill: currentColor;
+      }
+      .custom-pool {
+        grid-column: span 2;
+      }
+      .custom-pool[hidden] {
+        display: none;
+      }
+      .option {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin-top: 15px;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      .option input {
+        width: auto;
+        accent-color: var(--accent);
+      }
+      .option select {
+        width: auto;
+        padding: 6px;
+      }
+      .notes {
+        display: grid;
+        gap: 6px;
+        margin-top: 18px;
+        color: var(--muted);
+        font-size: 0.87rem;
+        font-weight: 650;
+      }
+      .notes textarea {
+        min-height: 100px;
+        resize: vertical;
+        line-height: 1.45;
+      }
+      .progressive-only[hidden] {
+        display: none;
+      }
+      .controls {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 22px;
+      }
+      button {
+        font: inherit;
+        font-weight: 750;
+        cursor: pointer;
+      }
+      .button {
+        padding: 10px 17px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #1b2542;
+        color: var(--text);
+      }
+      .primary {
+        border-color: transparent;
+        background: linear-gradient(135deg, #8a8cff, #6374e9);
+      }
+      button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .play-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 22px;
+      }
+      .play-header h1 {
+        font-size: 1.5rem;
+      }
+      .play-header span {
+        color: var(--muted);
+      }
+      .status {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 30px;
+        color: var(--muted);
+      }
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--muted);
+      }
+      .presenting .dot {
+        background: var(--warn);
+        animation: pulse 1s infinite;
+      }
+      .answer .dot {
+        background: var(--good);
+      }
+      @keyframes pulse {
+        50% {
+          transform: scale(1.5);
+        }
+      }
+      .round {
+        display: flex;
+        justify-content: space-between;
+        margin: 14px 0 17px;
+        color: var(--muted);
+      }
+      .round strong {
+        color: var(--text);
+      }
+      .game {
+        padding-top: 22px;
+        border-top: 1px solid var(--line);
+      }
+      .visual-stage {
+        display: grid;
+        place-items: center;
+        min-height: 190px;
+        margin: 18px 0;
+        border: 1px solid #40548b;
+        border-radius: 16px;
+        background: radial-gradient(circle, #253967, #10182c 70%);
+        font-size: clamp(5rem, 20vw, 9rem);
+        font-weight: 800;
+        line-height: 1;
+        color: #fff;
+        text-shadow: 0 0 28px #a8b4ff88;
+      }
+      .visual-stage[hidden] {
+        display: none;
+      }
+      .answer-area {
+        display: none;
+        gap: 10px;
+      }
+      .answer-area.show {
+        display: grid;
+      }
+      .answer-row {
+        display: flex;
+        gap: 10px;
+      }
+      .answer-row input {
+        flex: 1;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        font-weight: 750;
+      }
+      .feedback {
+        min-height: 25px;
+        margin: 13px 0;
+        color: var(--muted);
+      }
+      .correct {
+        color: var(--good);
+      }
+      .incorrect {
+        color: var(--bad);
+      }
+      .summary {
+        display: none;
+        margin-top: 19px;
+        padding: 17px;
+        border: 1px solid var(--line);
+        border-radius: 13px;
+        background: #0d152a;
+      }
+      .summary.show {
+        display: block;
+      }
+      .summary h2,
+      .summary p {
+        margin: 0 0 6px;
+      }
+      @media (max-width: 580px) {
+        body {
+          padding: 15px;
+        }
+        .settings {
+          grid-template-columns: 1fr;
+        }
+        .custom-pool {
+          grid-column: auto;
+        }
+        .answer-row {
+          flex-direction: column;
+        }
+        .answer-row button {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section id="setupScreen" class="screen">
+        <header class="hero">
+          <h1>Echo Span</h1>
+          <p>Listen closely. Hold the sequence. Type it back.</p>
+        </header>
+        <div class="card">
+          <div class="tabs" role="tablist">
+            <button id="customTab" role="tab" aria-selected="true">Custom Mode</button
+            ><button id="progressiveTab" role="tab" aria-selected="false">Progressive Mode</button>
+          </div>
+          <div class="settings">
+            <label
+              >Sequence length<input id="length" type="number" min="3" max="50" value="4"
+            /></label>
+            <label id="roundLabel"
+              >Rounds (1–20)<input id="rounds" type="number" min="1" max="20" value="5"
+            /></label>
+            <label
+              >Character set<select id="characterSet">
+                <option value="letters">Letters</option>
+                <option value="numbers">Numbers</option>
+                <option value="mixed">Letters &amp; numbers</option>
+                <option value="custom">Choose my own</option>
+              </select></label
+            >
+            <label
+              >Presentation<select id="presentation">
+                <option value="audio">Listen</option>
+                <option value="visual">Visual</option>
+              </select></label
+            >
+            <label id="voiceLabel"
+              >Voice
+              <div class="voice-row">
+                <select id="voice">
+                  <option value="">Browser default voice</option></select
+                ><button
+                  id="testVoice"
+                  class="icon-button"
+                  type="button"
+                  aria-label="Test selected voice"
+                  title="Test selected voice"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path
+                      d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"
+                    />
+                  </svg>
+                </button></div
+            ></label>
+            <label id="customPoolLabel" class="custom-pool" hidden
+              >My characters<input
+                id="customPool"
+                maxlength="50"
+                autocomplete="off"
+                autocapitalize="characters"
+                spellcheck="false"
+                placeholder="e.g. B D G M or 2 4 7"
+            /></label>
+          </div>
+          <label class="option"
+            ><input id="decrease" type="checkbox" /> Decrease length after a miss (never below
+            3)</label
+          >
+          <label id="missLabel" class="option progressive-only" hidden
+            >Progressive game over after<select id="missLimit">
+              <option value="2">2 consecutive misses</option>
+              <option value="3" selected>3 consecutive misses</option>
+            </select></label
+          >
+          <label class="notes"
+            >Notes<textarea
+              id="notes"
+              placeholder="Keep reminders or practice notes here…"
+            ></textarea>
+          </label>
+          <div class="controls"><button id="start" class="button primary">Start game</button></div>
+        </div>
+      </section>
+      <section id="playScreen" class="screen" hidden>
+        <div class="card">
+          <header class="play-header">
+            <div>
+              <h1>Echo Span</h1>
+              <span id="modeName"></span>
+            </div>
+            <button id="exit" class="button">Exit game</button>
+          </header>
+          <div id="status" class="status" aria-live="polite">
+            <span class="dot"></span><span id="statusText"></span>
+          </div>
+          <div class="round"><span id="roundText"></span><strong id="scoreText"></strong></div>
+          <div class="game">
+            <div
+              id="visualStage"
+              class="visual-stage"
+              aria-live="off"
+              aria-label="Current character"
+              hidden
+            ></div>
+            <div id="answerArea" class="answer-area">
+              <label for="answer">Type the sequence in order</label>
+              <div class="answer-row">
+                <input
+                  id="answer"
+                  autocomplete="off"
+                  autocapitalize="characters"
+                  spellcheck="false"
+                  placeholder="e.g. A C F K"
+                /><button id="submit" class="button primary">Submit</button>
+              </div>
+            </div>
+            <p id="feedback" class="feedback"></p>
+            <div class="controls"><button id="pause" class="button" disabled>Pause</button></div>
+            <section id="summary" class="summary">
+              <h2>Session complete</h2>
+              <p id="summaryText"></p>
+              <div class="controls">
+                <button id="again" class="button primary">Play again</button
+                ><button id="settings" class="button">Change settings</button>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script>
+      (() => {
+        const STORAGE_KEY = 'echo-span-settings';
+        const $ = (id) => document.getElementById(id);
+        const e = {
+          setup: $('setupScreen'),
+          play: $('playScreen'),
+          custom: $('customTab'),
+          progressive: $('progressiveTab'),
+          length: $('length'),
+          rounds: $('rounds'),
+          roundLabel: $('roundLabel'),
+          set: $('characterSet'),
+          presentation: $('presentation'),
+          voice: $('voice'),
+          voiceLabel: $('voiceLabel'),
+          testVoice: $('testVoice'),
+          customPool: $('customPool'),
+          customPoolLabel: $('customPoolLabel'),
+          decrease: $('decrease'),
+          miss: $('missLimit'),
+          missLabel: $('missLabel'),
+          notes: $('notes'),
+          start: $('start'),
+          exit: $('exit'),
+          pause: $('pause'),
+          submit: $('submit'),
+          again: $('again'),
+          settings: $('settings'),
+          status: $('status'),
+          statusText: $('statusText'),
+          modeName: $('modeName'),
+          roundText: $('roundText'),
+          scoreText: $('scoreText'),
+          visual: $('visualStage'),
+          answerArea: $('answerArea'),
+          answer: $('answer'),
+          feedback: $('feedback'),
+          summary: $('summary'),
+          summaryText: $('summaryText'),
+        };
+        const pools = {
+          letters: ['A', 'C', 'F', 'K', 'P', 'Q', 'T', 'Z'],
+          numbers: ['1', '2', '3', '4', '5', '6', '7', '8', '9'],
+          mixed: [
+            'A',
+            'C',
+            'F',
+            'K',
+            'P',
+            'Q',
+            'T',
+            'Z',
+            '1',
+            '2',
+            '3',
+            '4',
+            '5',
+            '6',
+            '7',
+            '8',
+            '9',
+          ],
+        };
+        const s = {
+          mode: 'custom',
+          presentation: 'audio',
+          active: false,
+          paused: false,
+          token: 0,
+          round: 0,
+          limit: 0,
+          length: 0,
+          correct: 0,
+          misses: 0,
+          missLimit: 3,
+          sequence: [],
+          results: [],
+          preferredVoice: '',
+        };
+        const clamp = (v, min, max, d) => Math.min(max, Math.max(min, parseInt(v, 10) || d));
+        const status = (text, type = '') => {
+          e.status.className = 'status ' + type;
+          e.statusText.textContent = text;
+        };
+        const norm = (v) => v.toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+        function parseCustomPool(raw) {
+          const chars = [...new Set(norm(raw).split(''))];
+          return chars;
+        }
+
+        function activePool() {
+          if (e.set.value === 'custom') return parseCustomPool(e.customPool.value);
+          return pools[e.set.value] || pools.letters;
+        }
+
+        function seq(n) {
+          const p = activePool();
+          return Array.from({ length: n }, () => p[Math.floor(Math.random() * p.length)]);
+        }
+
+        function saveSettings() {
+          try {
+            const data = {
+              mode: s.mode,
+              length: e.length.value,
+              rounds: e.rounds.value,
+              characterSet: e.set.value,
+              customPool: e.customPool.value,
+              presentation: e.presentation.value,
+              voice: e.voice.value || s.preferredVoice,
+              decrease: e.decrease.checked,
+              missLimit: e.miss.value,
+              notes: e.notes.value,
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+          } catch (_) {}
+        }
+
+        function loadSettings() {
+          try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return null;
+            return JSON.parse(raw);
+          } catch (_) {
+            return null;
+          }
+        }
+
+        function applySettings(data) {
+          if (!data) return;
+          if (data.mode === 'custom' || data.mode === 'progressive') mode(data.mode);
+          if (data.length != null) e.length.value = clamp(data.length, 3, 50, 4);
+          if (data.rounds != null) e.rounds.value = clamp(data.rounds, 1, 20, 5);
+          if (['letters', 'numbers', 'mixed', 'custom'].includes(data.characterSet))
+            e.set.value = data.characterSet;
+          if (typeof data.customPool === 'string') e.customPool.value = data.customPool;
+          if (data.presentation === 'audio' || data.presentation === 'visual')
+            e.presentation.value = data.presentation;
+          if (typeof data.voice === 'string') s.preferredVoice = data.voice;
+          if (typeof data.decrease === 'boolean') e.decrease.checked = data.decrease;
+          if (data.missLimit != null) e.miss.value = String(clamp(data.missLimit, 2, 3, 3));
+          if (typeof data.notes === 'string') e.notes.value = data.notes;
+          characterSetChanged();
+          presentationChanged();
+        }
+
+        function display() {
+          if (!s.active) return;
+          e.roundText.textContent =
+            s.mode === 'progressive'
+              ? `Round ${s.round} · ${s.length} characters · Misses ${s.misses}/${s.missLimit}`
+              : `Round ${s.round} of ${s.limit} · ${s.length} characters`;
+          e.scoreText.textContent = `Score: ${s.correct} / ${s.round - (s.sequence.length ? 1 : 0)}`;
+        }
+
+        function mode(m) {
+          s.mode = m;
+          const pro = m === 'progressive';
+          e.custom.setAttribute('aria-selected', !pro);
+          e.progressive.setAttribute('aria-selected', pro);
+          e.length.disabled = pro;
+          e.rounds.disabled = pro;
+          e.roundLabel.style.opacity = pro ? 0.45 : 1;
+          e.roundLabel.firstChild.textContent = pro ? 'Rounds (unlimited)' : 'Rounds (1–20)';
+          e.missLabel.hidden = !pro;
+          if (pro) e.length.value = 3;
+          saveSettings();
+        }
+
+        function characterSetChanged() {
+          e.customPoolLabel.hidden = e.set.value !== 'custom';
+          saveSettings();
+        }
+
+        function presentationChanged() {
+          e.voiceLabel.hidden = e.presentation.value !== 'audio';
+          saveSettings();
+        }
+
+        function voices() {
+          const list = speechSynthesis.getVoices();
+          const previous = e.voice.value || s.preferredVoice;
+          e.voice.innerHTML = '';
+          if (!list.length) {
+            e.voice.innerHTML = '<option value="">Browser default voice</option>';
+            return;
+          }
+          list
+            .sort((a, b) => {
+              const r = (v) => (/en[-_](ZA|GB|US)/i.test(v.lang) ? 0 : /en/i.test(v.lang) ? 1 : 2);
+              return r(a) - r(b) || Number(b.localService) - Number(a.localService);
+            })
+            .forEach((v, i) => {
+              const o = document.createElement('option');
+              o.value = String(list.indexOf(v));
+              o.textContent = `${v.name} (${v.lang})`;
+              e.voice.append(o);
+            });
+          if (previous !== '' && [...e.voice.options].some((o) => o.value === previous))
+            e.voice.value = previous;
+          else e.voice.selectedIndex = 0;
+          s.preferredVoice = e.voice.value;
+        }
+
+        function selectedVoice() {
+          const list = speechSynthesis.getVoices();
+          return list[Number(e.voice.value)] || null;
+        }
+
+        function say(text, t) {
+          return new Promise((done) => {
+            const u = new SpeechSynthesisUtterance(text);
+            const v = selectedVoice();
+            if (v) {
+              u.voice = v;
+              u.lang = v.lang;
+            }
+            u.rate = 0.78;
+            u.onend = u.onerror = () => done(t === s.token);
+            speechSynthesis.speak(u);
+          });
+        }
+
+        function testVoice() {
+          if (!('speechSynthesis' in window)) {
+            alert('Speech synthesis is not supported in this browser.');
+            return;
+          }
+          speechSynthesis.cancel();
+          const u = new SpeechSynthesisUtterance('This is a sample of the selected voice.');
+          const v = selectedVoice();
+          if (v) {
+            u.voice = v;
+            u.lang = v.lang;
+          }
+          u.rate = 0.78;
+          speechSynthesis.speak(u);
+        }
+
+        async function wait(ms, t) {
+          let left = ms,
+            last = performance.now();
+          while (left > 0 && t === s.token) {
+            await new Promise((r) => setTimeout(r, 60));
+            const now = performance.now();
+            if (!s.paused) left -= now - last;
+            last = now;
+          }
+          return t === s.token;
+        }
+
+        async function play() {
+          const t = s.token,
+            visual = s.presentation === 'visual';
+          s.sequence = seq(s.length);
+          e.answerArea.classList.remove('show');
+          e.answer.value = '';
+          e.feedback.textContent = '';
+          e.feedback.className = 'feedback';
+          e.visual.hidden = !visual;
+          display();
+          status(
+            visual ? 'Watch each character carefully.' : 'Speaking… listen to each character.',
+            'presenting'
+          );
+          e.pause.disabled = false;
+          for (let i = 0; i < s.sequence.length; i++) {
+            if (t !== s.token) return;
+            if (visual) {
+              e.visual.textContent = s.sequence[i];
+              if (!(await wait(900, t))) return;
+              e.visual.textContent = '';
+              if (i < s.sequence.length - 1 && !(await wait(250, t))) return;
+            } else {
+              await say(s.sequence[i], t);
+              if (i < s.sequence.length - 1 && !(await wait(1000, t))) return;
+            }
+          }
+          if (t !== s.token) return;
+          e.visual.hidden = true;
+          e.pause.disabled = true;
+          status(
+            `Waiting for input — type the sequence you ${visual ? 'saw' : 'heard'}.`,
+            'answer'
+          );
+          e.answerArea.classList.add('show');
+          e.answer.focus();
+        }
+
+        function begin() {
+          s.presentation = e.presentation.value;
+          if (s.presentation === 'audio' && !('speechSynthesis' in window)) {
+            alert(
+              'Speech synthesis is not supported in this browser. Choose Visual presentation instead.'
+            );
+            return;
+          }
+          if (e.set.value === 'custom') {
+            const pool = parseCustomPool(e.customPool.value);
+            if (pool.length < 2) {
+              alert('Enter at least 2 unique letters or numbers for your custom character set.');
+              e.customPool.focus();
+              return;
+            }
+          }
+          saveSettings();
+          s.token++;
+          s.active = true;
+          s.paused = false;
+          s.round = 1;
+          s.limit = s.mode === 'custom' ? clamp(e.rounds.value, 1, 20, 5) : Infinity;
+          s.length = s.mode === 'progressive' ? 3 : clamp(e.length.value, 3, 50, 4);
+          s.correct = 0;
+          s.misses = 0;
+          s.missLimit = clamp(e.miss.value, 2, 3, 3);
+          s.results = [];
+          e.modeName.textContent = `${s.mode === 'progressive' ? 'Progressive Mode · Unlimited rounds' : 'Custom Mode'} · ${s.presentation === 'visual' ? 'Visual' : 'Listening'}`;
+          e.setup.hidden = true;
+          e.play.hidden = false;
+          e.summary.classList.remove('show');
+          e.feedback.textContent = '';
+          play();
+        }
+
+        function finish(reason = 'Game complete.') {
+          s.active = false;
+          s.sequence = [];
+          e.answerArea.classList.remove('show');
+          e.pause.disabled = true;
+          status(reason);
+          display();
+          const total = s.results.length,
+            accuracy = total ? Math.round((s.correct / total) * 100) : 0,
+            high = Math.max(...s.results.map((x) => x.length), 0);
+          e.summaryText.textContent = `You recalled ${s.correct} of ${total} rounds correctly (${accuracy}% accuracy). Your highest sequence length was ${high}.`;
+          e.summary.classList.add('show');
+        }
+
+        function submit() {
+          if (!s.active || !e.answerArea.classList.contains('show')) return;
+          const entered = norm(e.answer.value),
+            expected = s.sequence.join(''),
+            ok = entered === expected;
+          s.results.push({ length: s.length, ok });
+          if (ok) {
+            s.correct++;
+            s.misses = 0;
+          } else s.misses++;
+          e.feedback.textContent =
+            (ok ? 'Correct! ' : 'Not quite. ') +
+            `Sequence: ${s.sequence.join(' ')} · Your answer: ${entered ? entered.split('').join(' ') : '—'}`;
+          e.feedback.className = 'feedback ' + (ok ? 'correct' : 'incorrect');
+          e.answerArea.classList.remove('show');
+          s.sequence = [];
+          if (s.mode === 'progressive') {
+            if (ok) s.length++;
+            else if (e.decrease.checked) s.length = Math.max(3, s.length - 1);
+            if (s.misses >= s.missLimit) {
+              finish(`${s.missLimit} consecutive misses — game over.`);
+              return;
+            }
+          } else if (s.round >= s.limit) {
+            finish();
+            return;
+          }
+          s.round++;
+          display();
+          setTimeout(() => s.active && play(), 800);
+        }
+
+        function exit() {
+          s.token++;
+          speechSynthesis.cancel();
+          s.active = false;
+          s.paused = false;
+          e.visual.hidden = true;
+          e.pause.disabled = true;
+          e.pause.textContent = 'Pause';
+          e.play.hidden = true;
+          e.setup.hidden = false;
+          saveSettings();
+        }
+
+        e.custom.onclick = () => mode('custom');
+        e.progressive.onclick = () => mode('progressive');
+        e.set.onchange = characterSetChanged;
+        e.presentation.onchange = presentationChanged;
+        e.voice.onchange = () => {
+          s.preferredVoice = e.voice.value;
+          saveSettings();
+        };
+        e.testVoice.onclick = testVoice;
+        e.length.onchange = saveSettings;
+        e.rounds.onchange = saveSettings;
+        e.customPool.oninput = saveSettings;
+        e.decrease.onchange = saveSettings;
+        e.miss.onchange = saveSettings;
+        e.notes.oninput = saveSettings;
+        e.start.onclick = begin;
+        e.submit.onclick = submit;
+        e.answer.onkeydown = (x) => {
+          if (x.key === 'Enter') submit();
+        };
+        e.exit.onclick = exit;
+        e.settings.onclick = exit;
+        e.again.onclick = begin;
+        e.pause.onclick = () => {
+          s.paused = !s.paused;
+          if (s.presentation === 'audio')
+            s.paused ? speechSynthesis.pause() : speechSynthesis.resume();
+          e.pause.textContent = s.paused ? 'Resume' : 'Pause';
+          status(
+            s.paused
+              ? 'Presentation paused.'
+              : s.presentation === 'visual'
+                ? 'Watch each character carefully.'
+                : 'Speaking… listen to each character.',
+            'presenting'
+          );
+        };
+
+        applySettings(loadSettings());
+        speechSynthesis.onvoiceschanged = voices;
+        voices();
+        presentationChanged();
+        characterSetChanged();
+        window.onbeforeunload = () => {
+          speechSynthesis.cancel();
+          saveSettings();
+        };
+      })();
+    </script>
+  </body>
+</html>
