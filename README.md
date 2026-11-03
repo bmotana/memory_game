@@ -5,10 +5,15 @@ A lightweight browser-based memory challenge built with HTML, CSS, and JavaScrip
 ## Features
 
 - Adjustable sequence length and round settings
-- Audio and visual presentation modes
+- Listen and visual presentation modes, with voice selection shown only for listening
+- Optional no-repeat sequences, with no repeated characters within each sequence
 - Custom and progressive play modes
 - Character pool customization
 - Responsive layout for desktop and mobile devices
+
+When no-repeat sequences are enabled, custom mode requires a sequence length no greater than the
+number of unique characters in the selected pool. In progressive mode, the sequence stops growing
+once it reaches the pool size.
 
 ## Getting Started
 
@@ -29,6 +34,7 @@ npm run dev     # start the Vite dev server
 npm run build   # build the app for production
 npm run preview # preview the production build
 npm run lint    # check formatting with Prettier
+npm test        # run sequence generation tests
 ```
 
 ## License
