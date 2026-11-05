@@ -12,3 +12,8 @@ export function generateSequence(pool, length, noRepeat = false, random = Math.r
   }
   return shuffled.slice(0, length);
 }
+
+export function getExpectedSequence(sequence, reverse = false) {
+  if (!Array.isArray(sequence)) return [];
+  return reverse ? [...sequence].reverse() : [...sequence];
+}

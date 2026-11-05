@@ -2,13 +2,17 @@
 node_modules/
 
 # Build output
+dist/
 /dist/
+.vite/
 /.vite/
 
 # Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
 # Python artifacts (for future scripts / tooling)
 __pycache__/
@@ -27,6 +31,7 @@ Thumbs.db
 # Environment files
 .env
 .env.*
+.env.local
 
 # Coverage
 coverage/

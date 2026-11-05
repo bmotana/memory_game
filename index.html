@@ -403,6 +403,10 @@
             ><input id="noRepeat" type="checkbox" /> Don't repeat characters within a
             sequence</label
           >
+          <label class="option"
+            ><input id="reverse" type="checkbox" /> Enter characters backwards (reverse
+            order)</label
+          >
           <label id="missLabel" class="option progressive-only" hidden
             >Progressive game over after<select id="missLimit">
               <option value="2">2 consecutive misses</option>
@@ -440,7 +444,7 @@
               hidden
             ></div>
             <div id="answerArea" class="answer-area">
-              <label for="answer">Type the sequence in order</label>
+              <label id="answerLabel" for="answer">Type the sequence in order</label>
               <div class="answer-row">
                 <input
                   id="answer"
@@ -466,7 +470,7 @@
       </section>
     </main>
     <script type="module">
-      import { generateSequence } from './src/sequence.js';
+      import { generateSequence, getExpectedSequence } from './src/sequence.js';
 
       (() => {
         const STORAGE_KEY = 'echo-span-settings';
@@ -488,6 +492,7 @@
           customPoolLabel: $('customPoolLabel'),
           decrease: $('decrease'),
           noRepeat: $('noRepeat'),
+          reverse: $('reverse'),
           miss: $('missLimit'),
           missLabel: $('missLabel'),
           notes: $('notes'),
@@ -504,6 +509,7 @@
           scoreText: $('scoreText'),
           visual: $('visualStage'),
           answerArea: $('answerArea'),
+          answerLabel: $('answerLabel'),
           answer: $('answer'),
           feedback: $('feedback'),
           summary: $('summary'),
@@ -544,6 +550,7 @@
           correct: 0,
           misses: 0,
           missLimit: 3,
+          reverse: false,
           sequence: [],
           results: [],
           preferredVoice: '',
@@ -581,6 +588,7 @@
               voice: e.voice.value || s.preferredVoice,
               decrease: e.decrease.checked,
               noRepeat: e.noRepeat.checked,
+              reverse: e.reverse.checked,
               missLimit: e.miss.value,
               notes: e.notes.value,
             };
@@ -611,6 +619,7 @@
           if (typeof data.voice === 'string') s.preferredVoice = data.voice;
           if (typeof data.decrease === 'boolean') e.decrease.checked = data.decrease;
           if (typeof data.noRepeat === 'boolean') e.noRepeat.checked = data.noRepeat;
+          if (typeof data.reverse === 'boolean') e.reverse.checked = data.reverse;
           if (data.missLimit != null) e.miss.value = String(clamp(data.missLimit, 2, 3, 3));
           if (typeof data.notes === 'string') e.notes.value = data.notes;
           characterSetChanged();
@@ -731,6 +740,10 @@
           e.feedback.textContent = '';
           e.feedback.className = 'feedback';
           e.visual.hidden = !visual;
+          e.answerLabel.textContent = s.reverse
+            ? 'Type the sequence in reverse order (backwards)'
+            : 'Type the sequence in order';
+          e.answer.placeholder = s.reverse ? 'e.g. K F C A' : 'e.g. A C F K';
           display();
           status(
             visual ? 'Watch each character carefully.' : 'Speaking… listen to each character.',
@@ -753,7 +766,7 @@
           e.visual.hidden = true;
           e.pause.disabled = true;
           status(
-            `Waiting for input — type the sequence you ${visual ? 'saw' : 'heard'}.`,
+            `Waiting for input — type the sequence you ${visual ? 'saw' : 'heard'}${s.reverse ? ' backwards' : ''}.`,
             'answer'
           );
           e.answerArea.classList.add('show');
@@ -788,6 +801,7 @@
             }
           }
           saveSettings();
+          s.reverse = e.reverse.checked;
           s.token++;
           s.active = true;
           s.paused = false;
@@ -798,7 +812,8 @@
           s.misses = 0;
           s.missLimit = clamp(e.miss.value, 2, 3, 3);
           s.results = [];
-          e.modeName.textContent = `${s.mode === 'progressive' ? 'Progressive Mode · Unlimited rounds' : 'Custom Mode'} · ${s.presentation === 'visual' ? 'Visual' : 'Listening'}`;
+          const orderLabel = s.reverse ? ' · Reverse order' : '';
+          e.modeName.textContent = `${s.mode === 'progressive' ? 'Progressive Mode · Unlimited rounds' : 'Custom Mode'} · ${s.presentation === 'visual' ? 'Visual' : 'Listening'}${orderLabel}`;
           e.setup.hidden = true;
           e.play.hidden = false;
           e.summary.classList.remove('show');
@@ -823,16 +838,22 @@
         function submit() {
           if (!s.active || !e.answerArea.classList.contains('show')) return;
           const entered = norm(e.answer.value),
-            expected = s.sequence.join(''),
+            expectedArray = getExpectedSequence(s.sequence, s.reverse),
+            expected = expectedArray.join(''),
             ok = entered === expected;
           s.results.push({ length: s.length, ok });
           if (ok) {
             s.correct++;
             s.misses = 0;
           } else s.misses++;
+          const sequenceStr = s.sequence.join(' ');
+          const expectedStr = expectedArray.join(' ');
+          const details = s.reverse
+            ? `Sequence: ${sequenceStr} (Expected backwards: ${expectedStr})`
+            : `Sequence: ${sequenceStr}`;
           e.feedback.textContent =
             (ok ? 'Correct! ' : 'Not quite. ') +
-            `Sequence: ${s.sequence.join(' ')} · Your answer: ${entered ? entered.split('').join(' ') : '—'}`;
+            `${details} · Your answer: ${entered ? entered.split('').join(' ') : '—'}`;
           e.feedback.className = 'feedback ' + (ok ? 'correct' : 'incorrect');
           e.answerArea.classList.remove('show');
           s.sequence = [];
@@ -880,6 +901,7 @@
         e.customPool.oninput = saveSettings;
         e.decrease.onchange = saveSettings;
         e.noRepeat.onchange = saveSettings;
+        e.reverse.onchange = saveSettings;
         e.miss.onchange = saveSettings;
         e.notes.oninput = saveSettings;
         e.start.onclick = begin;

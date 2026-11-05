@@ -6,6 +6,7 @@ A lightweight browser-based memory challenge built with HTML, CSS, and JavaScrip
 
 - Adjustable sequence length and round settings
 - Listen and visual presentation modes, with voice selection shown only for listening
+- Optional backwards entry (reverse recall) for both presentation modes (e.g. if the sequence is `1 3 4 7`, type `7 4 3 1`)
 - Optional no-repeat sequences, with no repeated characters within each sequence
 - Custom and progressive play modes
 - Character pool customization
@@ -25,7 +26,7 @@ once it reaches the pool size.
    ```bash
    npm run dev
    ```
-3. Open the local URL printed in the terminal.
+3. Open the local URL printed in the terminal (defaults to `http://localhost:3000`).
 
 ## Project Scripts
 
